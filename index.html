@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roblox 3D Cart Ride Game</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            user-select: none;
+        }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            pointer-events: none;
+        }
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+    <!-- Three.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body>
+
+    <div id="ui">
+        <h2>Roblox Cart Ride 3D</h2>
+        <p>Kecepatan: <span id="speedDisplay">0</span> km/h</p>
+    </div>
+
+    <div id="instructions">
+        Gunakan tombol <b>W / Panah Atas</b> untuk Maju  |  <b>S / Panah Bawah</b> untuk Mundur
+    </div>
+
+    <script>
+        // --- 1. SET UP SCENE, CAMERA, RENDERER ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x38B6FF); // Langit biru Roblox
+        scene.fog = new THREE.FogExp2(0x38B6FF, 0.005);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        document.body.appendChild(renderer.domElement);
+
+        // --- 2. LIGHTING ---
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(50, 100, 50);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        // --- 3. MEMBUAT JALUR REL (TRACK PATH) ---
+        // Jalur kurva 3D memutar dan naik turun
+        const trackPoints = [
+            new THREE.Vector3(0, 5, 0),
+            new THREE.Vector3(0, 5, -100),
+            new THREE.Vector3(30, 15, -180),
+            new THREE.Vector3(80, 40, -220),
+            new THREE.Vector3(120, 60, -150),
+            new THREE.Vector3(100, 30, -50),
+            new THREE.Vector3(0, 5, 0)
+        ];
+
+        const railCurve = new THREE.CatmullRomCurve3(trackPoints, true); // loop path
+
+        // Render Rel Kayu & Besi
+        function createRailMesh() {
+            const points = railCurve.getSpacedPoints(400);
+            
+            // Material
+            const steelMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.3, metalness: 0.8 });
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9 });
+
+            // Bantalan kayu (Plank)
+            for (let i = 0; i < points.length; i++) {
+                const pt = points[i];
+                const tangent = railCurve.getTangentAt(i / points.length);
+
+                const plankGeo = new THREE.BoxGeometry(3.5, 0.2, 0.8);
+                const plank = new THREE.Mesh(plankGeo, woodMat);
+                plank.position.copy(pt);
+                plank.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent);
+                scene.add(plank);
+            }
+
+            // Batang rel kiri dan kanan
+            const leftRailGeo = new THREE.TubeGeometry(railCurve, 400, 0.1, 8, false);
+            const rightRailGeo = new THREE.TubeGeometry(railCurve, 400, 0.1, 8, false);
+
+            const leftRail = new THREE.Mesh(leftRailGeo, steelMat);
+            const rightRail = new THREE.Mesh(rightRailGeo, steelMat);
+
+            // Geser sedikit ke kiri dan kanan dari tengah rel
+            leftRail.position.x -= 1.2;
+            rightRail.position.x += 1.2;
+
+            scene.add(leftRail);
+            scene.add(rightRail);
+        }
+        createRailMesh();
+
+        // --- 4. MEMBUAT ROBOK CART & KARAKTER ---
+        const cartGroup = new THREE.Group();
+
+        // Badan Cart (Kotak Hitam khas Roblox)
+        const bodyGeo = new THREE.BoxGeometry(2.4, 1.2, 3.2);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
+        const cartBody = new THREE.Mesh(bodyGeo, bodyMat);
+        cartBody.position.y = 0.6;
+        cartGroup.add(cartBody);
+
+        // Panel Tombol Kontrol Khas Cart Roblox di Atas Depan
+        const controlPanelGeo = new THREE.BoxGeometry(1.8, 0.1, 0.8);
+        const controlPanelMat = new THREE.MeshBasicMaterial({ color: 0x00FF00 }); // Hijau / Merah
+        const controlPanel = new THREE.Mesh(controlPanelGeo, controlPanelMat);
+        controlPanel.position.set(0, 1.25, -1.0);
+        cartGroup.add(controlPanel);
+
+        // Roda Cart
+        const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16);
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.5 });
+        const wheelPositions = [
+            [-1.2, 0.2, 1.0], [1.2, 0.2, 1.0],
+            [-1.2, 0.2, -1.0], [1.2, 0.2, -1.0]
+        ];
+
+        wheelPositions.forEach(pos => {
+            const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+            wheel.rotation.z = Math.PI / 2;
+            wheel.position.set(...pos);
+            cartGroup.add(wheel);
+        });
+
+        // Karakter Roblox Sederhana di Dalam Cart
+        const charGroup = new THREE.Group();
+        
+        // Badan (Baju Biru)
+        const torsoGeo = new THREE.BoxGeometry(0.8, 0.9, 0.4);
+        const torsoMat = new THREE.MeshStandardMaterial({ color: 0x55EEFF });
+        const torso = new THREE.Mesh(torsoGeo, torsoMat);
+        torso.position.y = 1.2;
+        charGroup.add(torso);
+
+        // Kepala & Rambut Cokelat
+        const headGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
+        const headMat = new THREE.MeshStandardMaterial({ color: 0xFFCC99 });
+        const head = new THREE.Mesh(headGeo, headMat);
+        head.position.y = 1.9;
+        charGroup.add(head);
+
+        const hairGeo = new THREE.BoxGeometry(0.55, 0.2, 0.55);
+        const hairMat = new THREE.MeshStandardMaterial({ color: 0x4A2E12 });
+        const hair = new THREE.Mesh(hairGeo, hairMat);
+        hair.position.y = 2.15;
+        charGroup.add(hair);
+
+        charGroup.position.set(0, 0.3, 0.2);
+        cartGroup.add(charGroup);
+
+        scene.add(cartGroup);
+
+        // --- 5. LOGIKA PERGERAKAN DENGAN TOMBOL ---
+        let progress = 0; // Posisi di rel (0.0 sampai 1.0)
+        let speed = 0;
+        const maxSpeed = 0.0015;
+        const acceleration = 0.00003;
+        const friction = 0.98;
+
+        const keys = { w: false, s: false, ArrowUp: false, ArrowDown: false };
+
+        window.addEventListener('keydown', (e) => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+        });
+
+        // --- 6. GAME LOOP (ANIMATION) ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Input Akselerasi
+            if (keys.w || keys.ArrowUp) {
+                speed = Math.min(speed + acceleration, maxSpeed);
+            } else if (keys.s || keys.ArrowDown) {
+                speed = Math.max(speed - acceleration, -maxSpeed / 2); // Mundur lebih lambat
+            } else {
+                speed *= friction; // Gesekan saat lepas tombol
+            }
+
+            // Update Posisi Progress Rel
+            progress = (progress + speed + 1) % 1; // Agar berputar terus di kurva loop
+
+            // Hitung koordinat cart di rel
+            const pointOnTrack = railCurve.getPointAt(progress);
+            const tangent = railCurve.getTangentAt(progress);
+
+            // Set posisi & orientasi (rotasi) Cart sesuai bentuk rel
+            cartGroup.position.copy(pointOnTrack);
+            
+            const lookAtTarget = pointOnTrack.clone().add(tangent);
+            cartGroup.lookAt(lookAtTarget);
+
+            // --- KONTROL KAMERA 3RD PERSON (MENGIKUTI CART) ---
+            const cameraOffset = new THREE.Vector3(0, 4, 8); // Di belakang dan sedikit di atas cart
+            cameraOffset.applyQuaternion(cartGroup.quaternion); // Putar offset mengikuti rotasi cart
+            
+            camera.position.copy(cartGroup.position).add(cameraOffset);
+            camera.lookAt(cartGroup.position.clone().add(new THREE.Vector3(0, 1.5, 0))); // Fokus ke kepala karakter
+
+            // Update UI Speed
+            document.getElementById('speedDisplay').innerText = Math.round(speed * 50000);
+
+            renderer.render(scene, camera);
+        }
+
+        // Adjust saat window di-resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
