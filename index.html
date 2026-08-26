@@ -3,244 +3,482 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Roblox 3D Cart Ride Game</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-            user-select: none;
-        }
-        #ui {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            color: white;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
-            pointer-events: none;
-        }
-        #instructions {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.6);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 14px;
-            text-align: center;
-        }
-    </style>
-    <!-- Three.js CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-</head>
-<body>
-
-    <div id="ui">
-        <h2>Roblox Cart Ride 3D</h2>
-        <p>Kecepatan: <span id="speedDisplay">0</span> km/h</p>
-    </div>
-
-    <div id="instructions">
-        Gunakan tombol <b>W / Panah Atas</b> untuk Maju  |  <b>S / Panah Bawah</b> untuk Mundur
-    </div>
+    <title>Micro:bit Dual Controller - Roblox Theme</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font: Fredoka / Press Start 2P Style -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    <!-- TensorFlow & Teachable Machine Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    
+    <!-- Firebase SDK (v9 Compatibility Mode) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
     <script>
-        // --- 1. SET UP SCENE, CAMERA, RENDERER ---
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x38B6FF); // Langit biru Roblox
-        scene.fog = new THREE.FogExp2(0x38B6FF, 0.005);
-
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.shadowMap.enabled = true;
-        document.body.appendChild(renderer.domElement);
-
-        // --- 2. LIGHTING ---
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-        scene.add(ambientLight);
-
-        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        dirLight.position.set(50, 100, 50);
-        dirLight.castShadow = true;
-        scene.add(dirLight);
-
-        // --- 3. MEMBUAT JALUR REL (TRACK PATH) ---
-        // Jalur kurva 3D memutar dan naik turun
-        const trackPoints = [
-            new THREE.Vector3(0, 5, 0),
-            new THREE.Vector3(0, 5, -100),
-            new THREE.Vector3(30, 15, -180),
-            new THREE.Vector3(80, 40, -220),
-            new THREE.Vector3(120, 60, -150),
-            new THREE.Vector3(100, 30, -50),
-            new THREE.Vector3(0, 5, 0)
-        ];
-
-        const railCurve = new THREE.CatmullRomCurve3(trackPoints, true); // loop path
-
-        // Render Rel Kayu & Besi
-        function createRailMesh() {
-            const points = railCurve.getSpacedPoints(400);
-            
-            // Material
-            const steelMat = new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.3, metalness: 0.8 });
-            const woodMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9 });
-
-            // Bantalan kayu (Plank)
-            for (let i = 0; i < points.length; i++) {
-                const pt = points[i];
-                const tangent = railCurve.getTangentAt(i / points.length);
-
-                const plankGeo = new THREE.BoxGeometry(3.5, 0.2, 0.8);
-                const plank = new THREE.Mesh(plankGeo, woodMat);
-                plank.position.copy(pt);
-                plank.quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), tangent);
-                scene.add(plank);
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        robloxDark: '#191B1D',
+                        robloxCard: '#232527',
+                        robloxBorder: '#393B3D',
+                        robloxRed: '#E1261C',
+                        robloxBlue: '#00A2FF',
+                        robloxBlueHover: '#0084DD',
+                        robloxYellow: '#F5CD2F'
+                    },
+                    fontFamily: {
+                        roblox: ['Fredoka', 'sans-serif']
+                    }
+                }
             }
-
-            // Batang rel kiri dan kanan
-            const leftRailGeo = new THREE.TubeGeometry(railCurve, 400, 0.1, 8, false);
-            const rightRailGeo = new THREE.TubeGeometry(railCurve, 400, 0.1, 8, false);
-
-            const leftRail = new THREE.Mesh(leftRailGeo, steelMat);
-            const rightRail = new THREE.Mesh(rightRailGeo, steelMat);
-
-            // Geser sedikit ke kiri dan kanan dari tengah rel
-            leftRail.position.x -= 1.2;
-            rightRail.position.x += 1.2;
-
-            scene.add(leftRail);
-            scene.add(rightRail);
         }
-        createRailMesh();
-
-        // --- 4. MEMBUAT ROBOK CART & KARAKTER ---
-        const cartGroup = new THREE.Group();
-
-        // Badan Cart (Kotak Hitam khas Roblox)
-        const bodyGeo = new THREE.BoxGeometry(2.4, 1.2, 3.2);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.5 });
-        const cartBody = new THREE.Mesh(bodyGeo, bodyMat);
-        cartBody.position.y = 0.6;
-        cartGroup.add(cartBody);
-
-        // Panel Tombol Kontrol Khas Cart Roblox di Atas Depan
-        const controlPanelGeo = new THREE.BoxGeometry(1.8, 0.1, 0.8);
-        const controlPanelMat = new THREE.MeshBasicMaterial({ color: 0x00FF00 }); // Hijau / Merah
-        const controlPanel = new THREE.Mesh(controlPanelGeo, controlPanelMat);
-        controlPanel.position.set(0, 1.25, -1.0);
-        cartGroup.add(controlPanel);
-
-        // Roda Cart
-        const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 16);
-        const wheelMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.5 });
-        const wheelPositions = [
-            [-1.2, 0.2, 1.0], [1.2, 0.2, 1.0],
-            [-1.2, 0.2, -1.0], [1.2, 0.2, -1.0]
-        ];
-
-        wheelPositions.forEach(pos => {
-            const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-            wheel.rotation.z = Math.PI / 2;
-            wheel.position.set(...pos);
-            cartGroup.add(wheel);
-        });
-
-        // Karakter Roblox Sederhana di Dalam Cart
-        const charGroup = new THREE.Group();
-        
-        // Badan (Baju Biru)
-        const torsoGeo = new THREE.BoxGeometry(0.8, 0.9, 0.4);
-        const torsoMat = new THREE.MeshStandardMaterial({ color: 0x55EEFF });
-        const torso = new THREE.Mesh(torsoGeo, torsoMat);
-        torso.position.y = 1.2;
-        charGroup.add(torso);
-
-        // Kepala & Rambut Cokelat
-        const headGeo = new THREE.BoxGeometry(0.5, 0.5, 0.5);
-        const headMat = new THREE.MeshStandardMaterial({ color: 0xFFCC99 });
-        const head = new THREE.Mesh(headGeo, headMat);
-        head.position.y = 1.9;
-        charGroup.add(head);
-
-        const hairGeo = new THREE.BoxGeometry(0.55, 0.2, 0.55);
-        const hairMat = new THREE.MeshStandardMaterial({ color: 0x4A2E12 });
-        const hair = new THREE.Mesh(hairGeo, hairMat);
-        hair.position.y = 2.15;
-        charGroup.add(hair);
-
-        charGroup.position.set(0, 0.3, 0.2);
-        cartGroup.add(charGroup);
-
-        scene.add(cartGroup);
-
-        // --- 5. LOGIKA PERGERAKAN DENGAN TOMBOL ---
-        let progress = 0; // Posisi di rel (0.0 sampai 1.0)
-        let speed = 0;
-        const maxSpeed = 0.0015;
-        const acceleration = 0.00003;
-        const friction = 0.98;
-
-        const keys = { w: false, s: false, ArrowUp: false, ArrowDown: false };
-
-        window.addEventListener('keydown', (e) => {
-            if (keys.hasOwnProperty(e.key)) keys[e.key] = true;
-        });
-
-        window.addEventListener('keyup', (e) => {
-            if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
-        });
-
-        // --- 6. GAME LOOP (ANIMATION) ---
-        function animate() {
-            requestAnimationFrame(animate);
-
-            // Input Akselerasi
-            if (keys.w || keys.ArrowUp) {
-                speed = Math.min(speed + acceleration, maxSpeed);
-            } else if (keys.s || keys.ArrowDown) {
-                speed = Math.max(speed - acceleration, -maxSpeed / 2); // Mundur lebih lambat
-            } else {
-                speed *= friction; // Gesekan saat lepas tombol
-            }
-
-            // Update Posisi Progress Rel
-            progress = (progress + speed + 1) % 1; // Agar berputar terus di kurva loop
-
-            // Hitung koordinat cart di rel
-            const pointOnTrack = railCurve.getPointAt(progress);
-            const tangent = railCurve.getTangentAt(progress);
-
-            // Set posisi & orientasi (rotasi) Cart sesuai bentuk rel
-            cartGroup.position.copy(pointOnTrack);
-            
-            const lookAtTarget = pointOnTrack.clone().add(tangent);
-            cartGroup.lookAt(lookAtTarget);
-
-            // --- KONTROL KAMERA 3RD PERSON (MENGIKUTI CART) ---
-            const cameraOffset = new THREE.Vector3(0, 4, 8); // Di belakang dan sedikit di atas cart
-            cameraOffset.applyQuaternion(cartGroup.quaternion); // Putar offset mengikuti rotasi cart
-            
-            camera.position.copy(cartGroup.position).add(cameraOffset);
-            camera.lookAt(cartGroup.position.clone().add(new THREE.Vector3(0, 1.5, 0))); // Fokus ke kepala karakter
-
-            // Update UI Speed
-            document.getElementById('speedDisplay').innerText = Math.round(speed * 50000);
-
-            renderer.render(scene, camera);
-        }
-
-        // Adjust saat window di-resize
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        animate();
     </script>
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+        }
+        .active-btn {
+            background-color: #E1261C !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 25px rgba(225, 38, 28, 0.8) !important;
+            border-color: #F5CD2F !important;
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="bg-robloxDark text-gray-100 min-h-screen p-4 lg:p-8 flex flex-col justify-between select-none">
+
+    <div class="w-full max-w-[1600px] mx-auto space-y-6">
+        <!-- Header Section -->
+        <header class="w-full bg-robloxCard/95 rounded-2xl p-6 border-2 border-robloxBorder shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-robloxRed rounded-lg flex items-center justify-center rotate-3 shadow-md border-2 border-white/20">
+                    <i class="fas fa-cube text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl lg:text-3xl font-extrabold tracking-wide text-white uppercase drop-shadow">
+                        ROBLOX CONTROLLER
+                    </h1>
+                    <p class="text-gray-400 text-xs mt-0.5 font-semibold">Dual Control System: Manual D-Pad & AI Hand Gesture Recognition</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+                <!-- Mode Indicator Badge -->
+                <div id="mode-badge" class="px-4 py-2.5 rounded-xl bg-black/50 border-2 border-robloxBorder text-xs font-bold text-robloxYellow tracking-wider uppercase shadow-inner">
+                    Mode: Manual Joystick
+                </div>
+
+                <!-- Firebase Config Modal Button -->
+                <button onclick="toggleModal(true)" class="p-2.5 bg-robloxRed/20 hover:bg-robloxRed/40 text-robloxRed rounded-xl border-2 border-robloxRed/50 transition active:scale-95" title="Pengaturan Firebase">
+                    <i class="fas fa-fire text-lg"></i>
+                </button>
+
+                <!-- Bluetooth Connection Button -->
+                <button id="btn-connect" onclick="connectBluetooth()" class="px-5 py-2.5 bg-robloxBlue hover:bg-robloxBlueHover text-white rounded-xl font-bold text-xs border-b-4 border-blue-800 shadow-lg transition duration-150 active:translate-y-1 active:border-b-0 flex items-center gap-2 uppercase tracking-wider">
+                    <i class="fab fa-bluetooth-b text-sm"></i>
+                    <span id="ble-btn-text">Hubungkan Micro:bit</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Grid Layout (Full Width 2-Column Desktop) -->
+        <main class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+            <!-- KOLOM 1: JOYSTICK D-PAD CONTROLLER -->
+            <section class="bg-robloxCard/95 rounded-2xl p-6 lg:p-8 border-2 border-robloxBorder shadow-[0_4px_20px_rgba(0,0,0,0.4)] flex flex-col items-center justify-between min-h-[500px]">
+                <div class="w-full flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-bold text-white uppercase flex items-center gap-2">
+                        <i class="fas fa-gamepad text-robloxBlue"></i> D-Pad Joystick
+                    </h2>
+                    <span class="text-xs text-gray-400 font-medium">Klik/Tahan untuk Gerak Manual</span>
+                </div>
+
+                <!-- Ring D-Pad Container -->
+                <div class="relative w-72 h-72 sm:w-[320px] sm:h-[320px] rounded-3xl bg-black/60 border-4 border-robloxBorder shadow-inner flex items-center justify-center p-4 my-auto">
+                    
+                    <div class="grid grid-cols-3 gap-3 w-full h-full p-2 select-none">
+                        <div></div>
+                        <!-- BUTTON ATAS -->
+                        <button id="bt-up" class="dpad-btn group relative w-full h-full bg-robloxBorder/60 rounded-t-2xl border-b-4 border-black/40 flex flex-col items-center justify-center text-white hover:bg-robloxBlue transition">
+                            <i class="fas fa-chevron-up text-2xl group-hover:-translate-y-1 transition-transform"></i>
+                            <span class="text-[10px] font-black tracking-widest mt-1 opacity-80 uppercase">MAJU</span>
+                        </button>
+                        <div></div>
+
+                        <!-- BUTTON KIRI -->
+                        <button id="bt-left" class="dpad-btn group relative w-full h-full bg-robloxBorder/60 rounded-l-2xl border-b-4 border-black/40 flex flex-col items-center justify-center text-white hover:bg-robloxBlue transition">
+                            <i class="fas fa-chevron-left text-2xl group-hover:-translate-x-1 transition-transform"></i>
+                            <span class="text-[10px] font-black tracking-widest mt-1 opacity-80 uppercase">KIRI</span>
+                        </button>
+
+                        <!-- PUSAT STATUS -->
+                        <div class="flex items-center justify-center">
+                            <div class="w-12 h-12 rounded-2xl bg-black border-2 border-robloxBorder flex items-center justify-center shadow-inner">
+                                <div id="status-dot" class="w-4 h-4 bg-robloxRed rounded-full shadow-[0_0_15px_rgba(225,38,28,0.8)] transition-all"></div>
+                            </div>
+                        </div>
+
+                        <!-- BUTTON KANAN -->
+                        <button id="bt-right" class="dpad-btn group relative w-full h-full bg-robloxBorder/60 rounded-r-2xl border-b-4 border-black/40 flex flex-col items-center justify-center text-white hover:bg-robloxBlue transition">
+                            <i class="fas fa-chevron-right text-2xl group-hover:translate-x-1 transition-transform"></i>
+                            <span class="text-[10px] font-black tracking-widest mt-1 opacity-80 uppercase">KANAN</span>
+                        </button>
+
+                        <div></div>
+                        <!-- BUTTON BAWAH -->
+                        <button id="bt-down" class="dpad-btn group relative w-full h-full bg-robloxBorder/60 rounded-b-2xl border-b-4 border-black/40 flex flex-col items-center justify-center text-white hover:bg-robloxBlue transition">
+                            <span class="text-[10px] font-black tracking-widest mb-1 opacity-80 uppercase">MUNDUR</span>
+                            <i class="fas fa-chevron-down text-2xl group-hover:translate-y-1 transition-transform"></i>
+                        </button>
+                        <div></div>
+                    </div>
+                </div>
+
+                <!-- Controller Info Footer -->
+                <div class="w-full flex justify-between items-center text-xs text-gray-400 border-t-2 border-robloxBorder pt-4 mt-2 font-medium">
+                    <span>Micro:bit BLE: <strong id="ble-status" class="text-robloxRed">Terputus</strong></span>
+                    <span>Firebase Sync: <strong id="fb-status" class="text-robloxYellow">Belum Terhubung</strong></span>
+                </div>
+            </section>
+
+            <!-- KOLOM 2: CAMERA HAND GESTURE RECOGNITION -->
+            <section class="bg-robloxCard/95 rounded-2xl p-6 lg:p-8 border-2 border-robloxBorder shadow-[0_4px_20px_rgba(0,0,0,0.4)] flex flex-col items-center justify-between min-h-[500px]">
+                <div class="w-full flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-bold text-white uppercase flex items-center gap-2">
+                        <i class="fas fa-video text-robloxBlue"></i> AI Hand Gesture
+                    </h2>
+                    <!-- Toggle Switch AI Camera -->
+                    <button id="btn-toggle-cam" onclick="toggleCamera()" class="px-4 py-2 bg-robloxBlue hover:bg-robloxBlueHover text-white font-bold rounded-xl text-xs border-b-4 border-blue-900 transition active:translate-y-0.5 active:border-b-0 flex items-center gap-2 uppercase tracking-wider">
+                        <i class="fas fa-power-off"></i>
+                        <span id="cam-btn-text">Nyalakan Kamera</span>
+                    </button>
+                </div>
+
+                <!-- Camera Container -->
+                <div class="relative w-full max-w-[280px] aspect-square rounded-2xl overflow-hidden border-4 border-robloxBorder shadow-inner bg-black flex flex-col items-center justify-center my-auto">
+                    <div id="webcam-container" class="w-full h-full flex items-center justify-center"></div>
+                    <div id="cam-placeholder" class="text-gray-500 flex flex-col items-center gap-2">
+                        <i class="fas fa-camera text-4xl mb-1 text-robloxBorder"></i>
+                        <span class="text-xs font-bold uppercase">Kamera Off</span>
+                    </div>
+                </div>
+
+                <!-- Predictions Result Log -->
+                <div class="w-full border-t-2 border-robloxBorder pt-4 mt-2">
+                    <div class="text-[11px] text-gray-400 mb-2 font-bold flex justify-between uppercase">
+                        <span>Akurasi Teachable Machine:</span>
+                        <span>Prediksi Tertinggi = Aktif</span>
+                    </div>
+                    <div id="label-container" class="grid grid-cols-2 gap-2 text-xs font-mono"></div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Bottom Command Status Banner -->
+    <footer class="w-full max-w-[1600px] mx-auto mt-6 bg-robloxCard/95 rounded-2xl p-4 border-2 border-robloxBorder flex justify-between items-center text-sm shadow-md">
+        <span class="text-gray-300 font-bold uppercase tracking-wider">Perintah Terkirim:</span>
+        <div class="bg-black/70 px-6 py-2 rounded-xl border-2 border-robloxBorder font-mono font-black text-robloxYellow text-lg uppercase tracking-widest shadow-inner">
+            <span id="last-cmd">STOP</span>
+        </div>
+    </footer>
+
+    <!-- MODAL SETTING FIREBASE -->
+    <div id="fb-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-robloxCard border-4 border-robloxBorder rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4 relative">
+            <div class="flex justify-between items-center border-b-2 border-robloxBorder pb-3">
+                <h3 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-fire text-robloxRed"></i> Konfigurasi Firebase Realtime DB
+                </h3>
+                <button onclick="toggleModal(false)" class="text-gray-400 hover:text-white text-lg">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 uppercase mb-1">API Key</label>
+                    <input type="text" id="fb-api-key" placeholder="AIzaSy..." class="w-full bg-black/60 border-2 border-robloxBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-robloxBlue">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-300 uppercase mb-1">Database URL</label>
+                    <input type="text" id="fb-db-url" placeholder="https://your-app-default-rtdb.firebaseio.com" class="w-full bg-black/60 border-2 border-robloxBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-robloxBlue">
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end gap-2">
+                <button onclick="toggleModal(false)" class="px-4 py-2 bg-black/50 hover:bg-black text-gray-300 font-bold text-xs rounded-xl transition border-2 border-robloxBorder uppercase">
+                    Batal
+                </button>
+                <button onclick="initFirebase()" class="px-4 py-2 bg-robloxBlue hover:bg-robloxBlueHover text-white font-bold text-xs rounded-xl border-b-4 border-blue-900 transition uppercase tracking-wider">
+                    Simpan & Connect
+                </button>
+            </div>
+        </div>
+    </div>
+
+<script type="text/javascript">
+    // --- MODAL TOGGLE ---
+    function toggleModal(show) {
+        const modal = document.getElementById('fb-modal');
+        if (show) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        } else {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+    }
+
+    // --- 0. KONFIGURASI FIREBASE ---
+    let dbRef = null;
+
+    function initFirebase() {
+        const apiKey = document.getElementById('fb-api-key').value.trim();
+        const databaseURL = document.getElementById('fb-db-url').value.trim();
+
+        if (!apiKey || !databaseURL) {
+            alert("Harap isi API Key dan Database URL Firebase!");
+            return;
+        }
+
+        try {
+            const firebaseConfig = { apiKey, databaseURL };
+
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            } else {
+                firebase.app().delete().then(() => {
+                    firebase.initializeApp(firebaseConfig);
+                });
+            }
+
+            dbRef = firebase.database().ref('robot_control');
+            document.getElementById('fb-status').innerText = "Terhubung";
+            document.getElementById('fb-status').className = "text-green-400 font-bold";
+            toggleModal(false);
+            alert("Berhasil terhubung ke Firebase!");
+        } catch(e) {
+            console.error("Firebase Init Error:", e);
+            document.getElementById('fb-status').innerText = "Gagal Konek";
+            document.getElementById('fb-status').className = "text-robloxRed font-bold";
+            alert("Gagal konek Firebase. Periksa API Key / Database URL.");
+        }
+    }
+
+    function sendToFirebase(command, mode) {
+        if (dbRef) {
+            dbRef.set({
+                command: command,
+                mode: mode,
+                timestamp: Date.now()
+            }).catch(err => console.error("Firebase Sync Error:", err));
+        }
+    }
+
+    // --- 1. CONFIG & GLOBALS ---
+    const MODEL_URL = "https://teachablemachine.withgoogle.com/models/mZ_Qhc9ZT/";
+    let model, webcam, labelContainer, maxPredictions;
+    let bluetoothDevice, uartTxCharacteristic;
+    let currentCommand = "stop";
+    let isAiMode = false;
+
+    const UART_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
+    const UART_TX_CHARACTERISTIC_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+
+    // --- 2. WEB BLUETOOTH INTEGRATION ---
+    async function connectBluetooth() {
+        try {
+            bluetoothDevice = await navigator.bluetooth.requestDevice({
+                filters: [{ namePrefix: 'BBC micro:bit' }],
+                optionalServices: [UART_SERVICE_UUID]
+            });
+
+            const server = await bluetoothDevice.gatt.connect();
+            const service = await server.getPrimaryService(UART_SERVICE_UUID);
+            uartTxCharacteristic = await service.getCharacteristic(UART_TX_CHARACTERISTIC_UUID);
+
+            document.getElementById('ble-status').innerText = "Terhubung";
+            document.getElementById('ble-status').className = "text-green-400 font-bold";
+            document.getElementById('ble-btn-text').innerText = "Micro:bit Terhubung";
+            document.getElementById('status-dot').className = "w-4 h-4 bg-green-500 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.9)] animate-pulse";
+        } catch (error) {
+            console.error("Bluetooth Gagal:", error);
+            alert("Gagal/Dibatalkan terhubung dengan micro:bit.");
+        }
+    }
+
+    function sendToMicrobit(command) {
+        if (currentCommand === command) return;
+        currentCommand = command;
+        document.getElementById('last-cmd').innerText = command;
+
+        sendToFirebase(command, isAiMode ? "AI_AUTOMATIC" : "MANUAL_JOYSTICK");
+
+        if (uartTxCharacteristic) {
+            const encoder = new TextEncoder();
+            uartTxCharacteristic.writeValue(encoder.encode(command + "\n"))
+                .catch(err => console.error("Bluetooth TX Error:", err));
+        }
+    }
+
+    // --- 3. D-PAD MANUAL JOYSTICK LOGIC ---
+    function setupManualJoystick() {
+        const buttons = {
+            'bt-up': 'up',
+            'bt-down': 'down',
+            'bt-left': 'left',
+            'bt-right': 'right'
+        };
+
+        Object.keys(buttons).forEach(id => {
+            const btn = document.getElementById(id);
+            const cmd = buttons[id];
+
+            const startPress = (e) => {
+                e.preventDefault();
+                if (!isAiMode) {
+                    highlightButton(id);
+                    sendToMicrobit(cmd);
+                }
+            };
+
+            const endPress = (e) => {
+                e.preventDefault();
+                if (!isAiMode) {
+                    resetButtons();
+                    sendToMicrobit("stop");
+                }
+            };
+
+            btn.addEventListener('mousedown', startPress);
+            btn.addEventListener('mouseup', endPress);
+            btn.addEventListener('mouseleave', endPress);
+            btn.addEventListener('touchstart', startPress);
+            btn.addEventListener('touchend', endPress);
+        });
+    }
+    setupManualJoystick();
+
+    // --- 4. TEACHABLE MACHINE AI CAMERA ---
+    async function toggleCamera() {
+        if (!isAiMode) {
+            document.getElementById('cam-btn-text').innerText = "Memuat AI...";
+            if (!model) {
+                const modelURL = MODEL_URL + "model.json";
+                const metadataURL = MODEL_URL + "metadata.json";
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
+            }
+
+            const flip = true;
+            webcam = new tmImage.Webcam(280, 280, flip);
+            await webcam.setup();
+            await webcam.play();
+
+            document.getElementById('cam-placeholder').style.display = "none";
+            document.getElementById('webcam-container').appendChild(webcam.canvas);
+
+            labelContainer = document.getElementById("label-container");
+            labelContainer.innerHTML = "";
+            for (let i = 0; i < maxPredictions; i++) {
+                labelContainer.appendChild(document.createElement("div"));
+            }
+
+            isAiMode = true;
+            document.getElementById('cam-btn-text').innerText = "Matikan Kamera";
+            document.getElementById('btn-toggle-cam').classList.replace('bg-robloxBlue', 'bg-robloxRed');
+            document.getElementById('btn-toggle-cam').classList.replace('border-blue-900', 'border-red-900');
+            document.getElementById('mode-badge').innerText = "Mode: AI Gesture";
+            document.getElementById('mode-badge').className = "px-4 py-2.5 rounded-xl bg-robloxRed border-2 border-robloxYellow text-xs font-bold text-white tracking-wider uppercase animate-pulse";
+
+            window.requestAnimationFrame(loop);
+        } else {
+            isAiMode = false;
+            if (webcam) webcam.stop();
+            document.getElementById('webcam-container').innerHTML = "";
+            document.getElementById('cam-placeholder').style.display = "flex";
+            document.getElementById('label-container').innerHTML = "";
+            
+            document.getElementById('cam-btn-text').innerText = "Nyalakan Kamera";
+            document.getElementById('btn-toggle-cam').classList.replace('bg-robloxRed', 'bg-robloxBlue');
+            document.getElementById('btn-toggle-cam').classList.replace('border-red-900', 'border-blue-900');
+            document.getElementById('mode-badge').innerText = "Mode: Manual Joystick";
+            document.getElementById('mode-badge').className = "px-4 py-2.5 rounded-xl bg-black/50 border-2 border-robloxBorder text-xs font-bold text-robloxYellow tracking-wider uppercase";
+
+            resetButtons();
+            sendToMicrobit("stop");
+        }
+    }
+
+    async function loop() {
+        if (!isAiMode) return;
+        webcam.update();
+        await predict();
+        window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+        const prediction = await model.predict(webcam.canvas);
+        let highestProb = 0;
+        let bestClass = "stop";
+
+        for (let i = 0; i < maxPredictions; i++) {
+            const className = prediction[i].className;
+            const probability = prediction[i].probability;
+
+            labelContainer.childNodes[i].innerHTML = 
+                `<div class="bg-black/60 p-1.5 rounded-lg border border-robloxBorder flex justify-between items-center">
+                    <span class="capitalize text-gray-200 text-[11px] font-bold">${className}</span>
+                    <span class="font-bold text-robloxYellow text-[11px]">${(probability * 100).toFixed(0)}%</span>
+                 </div>`;
+
+            if (probability > highestProb) {
+                highestProb = probability;
+                bestClass = className.toLowerCase();
+            }
+        }
+
+        if (highestProb < 0.65) bestClass = "stop";
+
+        if (bestClass.includes("atas") || bestClass.includes("up") || bestClass.includes("maju")) {
+            highlightButton('bt-up');
+            sendToMicrobit("up");
+        } else if (bestClass.includes("bawah") || bestClass.includes("down") || bestClass.includes("mundur")) {
+            highlightButton('bt-down');
+            sendToMicrobit("down");
+        } else if (bestClass.includes("kiri") || bestClass.includes("left")) {
+            highlightButton('bt-left');
+            sendToMicrobit("left");
+        } else if (bestClass.includes("kanan") || bestClass.includes("right")) {
+            highlightButton('bt-right');
+            sendToMicrobit("right");
+        } else {
+            resetButtons();
+            sendToMicrobit("stop");
+        }
+    }
+
+    // --- 5. UI HIGHLIGHT HELPER ---
+    function highlightButton(buttonId) {
+        resetButtons();
+        const btn = document.getElementById(buttonId);
+        if (btn) btn.classList.add('active-btn');
+    }
+
+    function resetButtons() {
+        ['bt-up', 'bt-down', 'bt-left', 'bt-right'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.classList.remove('active-btn');
+        });
+    }
+</script>
 </body>
 </html>
