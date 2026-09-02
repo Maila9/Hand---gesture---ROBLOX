@@ -3,18 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Micro:bit Dual Controller - Roblox Theme</title>
-    <!-- Tailwind CSS -->
+    <title>Micro:bit Dual Controller - Roblox Sky & Hills Theme</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Font: Fredoka / Press Start 2P Style -->
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
-    <!-- TensorFlow & Teachable Machine Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
-    
-    <!-- Firebase SDK (v9 Compatibility Mode) -->
+
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
 
@@ -23,158 +17,231 @@
             theme: {
                 extend: {
                     colors: {
-                        robloxDark: '#191B1D',
-                        robloxCard: '#232527',
-                        robloxBorder: '#393B3D',
-                        robloxRed: '#E1261C',
-                        robloxBlue: '#00A2FF',
-                        robloxBlueHover: '#0084DD',
-                        robloxYellow: '#F5CD2F'
-                    },
-                    fontFamily: {
-                        roblox: ['Fredoka', 'sans-serif']
+                        deepPurple: '#abbd64',
+                        cardPurple: '#fff5b6',
+                        borderPurple: '#e2d585',
+                        purpleGlow: '#f8aa54'
                     }
                 }
             }
         }
     </script>
     <style>
-        body {
-            font-family: 'Fredoka', sans-serif;
-        }
         .active-btn {
-            background-color: #E1261C !important;
+            background-color: #f8aa54 !important;
             color: #ffffff !important;
-            box-shadow: 0 0 25px rgba(225, 38, 28, 0.8) !important;
-            border-color: #F5CD2F !important;
+            box-shadow: 0 0 25px #f8aa54 !important;
+            border-color: #ffffff !important;
             transform: scale(0.95);
+        }
+
+        /* Area Kereta & Background Langit */
+        .train-container {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #38bdf8 0%, #7dd3fc 50%, #bae6fd 100%);
+        }
+
+        /* Animasi Awan Mengapung */
+        .cloud-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 25%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.85) 25px, transparent 26px),
+                radial-gradient(circle at 24% 20%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.85) 35px, transparent 36px),
+                radial-gradient(circle at 28% 25%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.85) 25px, transparent 26px),
+                radial-gradient(circle at 70% 30%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.75) 30px, transparent 31px),
+                radial-gradient(circle at 75% 25%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.75) 40px, transparent 41px);
+            animation: cloudMove 35s linear infinite;
+        }
+
+        @keyframes cloudMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Elemen Bukit Hijau Berlapis */
+        .hills-bg-back {
+            position: absolute;
+            bottom: 25px;
+            left: 0;
+            width: 100%;
+            height: 80px;
+            background: #86efac;
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+            transform: scaleX(1.8) translateY(20px);
+            z-index: 1;
+        }
+
+        .hills-bg-front {
+            position: absolute;
+            bottom: 20px;
+            right: -10%;
+            width: 80%;
+            height: 70px;
+            background: #4ade80;
+            border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+            z-index: 1;
+        }
+
+        /* Continuous Rail Track Styling */
+        .rail-track {
+            background-image: repeating-linear-gradient(
+                90deg,
+                #78350f 0px,
+                #78350f 14px,
+                transparent 14px,
+                transparent 36px
+            );
+            position: relative;
+            z-index: 2;
+        }
+
+        .rail-track::before, .rail-track::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: #334155;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+
+        .rail-track::before { top: 4px; }
+        .rail-track::after { bottom: 4px; }
+
+        /* Sprite Kereta Roblox (Ukuran 95px) */
+        .train-sprite {
+            position: absolute;
+            bottom: 22px;
+            height: 95px;
+            left: 10%;
+            z-index: 3;
+            transform: translateX(0) scaleX(1);
+            transition: left 0.3s ease, transform 0.2s ease;
         }
     </style>
 </head>
-<body class="bg-robloxDark text-gray-100 min-h-screen p-4 lg:p-8 flex flex-col justify-between select-none">
+<body class="bg-deepPurple text-amber-950 min-h-screen p-4 lg:p-8 font-sans flex flex-col justify-between" onclick="playAudioOnFirstInteraction()">
+
+    <!-- Audio Player Backsound -->
+    <audio id="bgm-player" loop preload="auto" crossorigin="anonymous">
+        <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3" type="audio/mpeg">
+    </audio>
 
     <div class="w-full max-w-[1600px] mx-auto space-y-6">
-        <!-- Header Section -->
-        <header class="w-full bg-robloxCard/95 rounded-2xl p-6 border-2 border-robloxBorder shadow-[0_4px_20px_rgba(0,0,0,0.5)] flex flex-col md:flex-row justify-between items-center gap-4">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-robloxRed rounded-lg flex items-center justify-center rotate-3 shadow-md border-2 border-white/20">
-                    <i class="fas fa-cube text-white text-xl"></i>
-                </div>
-                <div>
-                    <h1 class="text-2xl lg:text-3xl font-extrabold tracking-wide text-white uppercase drop-shadow">
-                        ROBLOX CONTROLLER
-                    </h1>
-                    <p class="text-gray-400 text-xs mt-0.5 font-semibold">Dual Control System: Manual D-Pad & AI Hand Gesture Recognition</p>
-                </div>
+        <header class="w-full bg-cardPurple/90 backdrop-blur-xl rounded-3xl p-6 border-4 border-borderPurple shadow-lg flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+                <h1 class="text-2xl lg:text-3xl font-black tracking-wider text-amber-800">
+                    ROBLOX CART CONTROLLER
+                </h1>
+                <p class="text-amber-700/80 text-xs font-bold mt-1">Multi Controller: D-Pad, Keyboard Arrow Keys & AI Hand Gesture</p>
             </div>
-            
+
             <div class="flex items-center gap-3 w-full md:w-auto justify-end">
-                <!-- Mode Indicator Badge -->
-                <div id="mode-badge" class="px-4 py-2.5 rounded-xl bg-black/50 border-2 border-robloxBorder text-xs font-bold text-robloxYellow tracking-wider uppercase shadow-inner">
-                    Mode: Manual Joystick
+                <button id="btn-audio" onclick="toggleAudio()" class="p-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl border border-yellow-400 transition active:scale-95 shadow flex items-center gap-2" title="Toggle Backsound">
+                    <i id="audio-icon" class="fas fa-volume-mute"></i>
+                    <span id="audio-status-text" class="text-xs font-bold">Mute</span>
+                </button>
+
+                <div id="mode-badge" class="px-4 py-2.5 rounded-xl bg-amber-200 border border-amber-400 text-xs font-bold text-amber-900 tracking-wider uppercase">
+                    Mode: Manual / Keyboard
                 </div>
 
-                <!-- Firebase Config Modal Button -->
-                <button onclick="toggleModal(true)" class="p-2.5 bg-robloxRed/20 hover:bg-robloxRed/40 text-robloxRed rounded-xl border-2 border-robloxRed/50 transition active:scale-95" title="Pengaturan Firebase">
+                <button onclick="toggleModal(true)" class="p-2.5 bg-orange-500 hover:bg-orange-600 text-white rounded-xl border border-orange-400 transition active:scale-95 shadow" title="Pengaturan Firebase">
                     <i class="fas fa-fire text-lg"></i>
                 </button>
 
-                <!-- Bluetooth Connection Button -->
-                <button id="btn-connect" onclick="connectBluetooth()" class="px-5 py-2.5 bg-robloxBlue hover:bg-robloxBlueHover text-white rounded-xl font-bold text-xs border-b-4 border-blue-800 shadow-lg transition duration-150 active:translate-y-1 active:border-b-0 flex items-center gap-2 uppercase tracking-wider">
+                <button id="btn-connect" onclick="connectBluetooth()" class="px-5 py-2.5 bg-sky-500 hover:bg-sky-600 text-white rounded-xl font-bold text-xs shadow transition duration-200 active:scale-95 flex items-center gap-2">
                     <i class="fab fa-bluetooth-b text-sm"></i>
                     <span id="ble-btn-text">Hubungkan Micro:bit</span>
                 </button>
             </div>
         </header>
 
-        <!-- Main Grid Layout (Full Width 2-Column Desktop) -->
         <main class="w-full grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            <!-- KOLOM 1: JOYSTICK D-PAD CONTROLLER -->
-            <section class="bg-robloxCard/95 rounded-2xl p-6 lg:p-8 border-2 border-robloxBorder shadow-[0_4px_20px_rgba(0,0,0,0.4)] flex flex-col items-center justify-between min-h-[500px]">
+
+            <section class="bg-cardPurple/90 backdrop-blur-xl rounded-3xl p-6 lg:p-8 border-4 border-borderPurple shadow-lg flex flex-col items-center justify-between min-h-[500px]">
                 <div class="w-full flex justify-between items-center mb-2">
-                    <h2 class="text-lg font-bold text-white uppercase flex items-center gap-2">
-                        <i class="fas fa-gamepad text-robloxBlue"></i> D-Pad Joystick
+                    <h2 class="text-lg font-bold text-amber-900 flex items-center gap-2">
+                        <i class="fas fa-gamepad text-amber-700"></i> Joystick & Keyboard Control
                     </h2>
-                    <span class="text-xs text-gray-400 font-medium">Klik/Tahan untuk Gerak Manual</span>
+                    <span class="text-xs text-amber-800/70 font-semibold">Gunakan Tombol Panah (🟨 Keyboard)</span>
                 </div>
 
-                <!-- Ring D-Pad Container -->
-                <div class="relative w-72 h-72 sm:w-[320px] sm:h-[320px] rounded-3xl bg-black/60 border-4 border-robloxBorder shadow-inner flex items-center justify-center p-4 my-auto">
-                    
+                <div class="relative w-72 h-72 sm:w-[320px] sm:h-[320px] rounded-full bg-amber-100/80 border-4 border-amber-300 shadow-inner flex items-center justify-center p-4 my-auto">
+
                     <div class="grid grid-cols-3 gap-3 w-full h-full p-2 select-none">
                         <div></div>
-                        <!-- BUTTON ATAS -->
-                        <button id="bt-up" class="dpad-btn group relative w-full h-full bg-robloxBorder/60 rounded-t-2xl border-b-4 border-black/40 flex flex-col items-center justify-center text-white hover:bg-robloxBlue transition">
-                            <i class="fas fa-chevron-up text-2xl group-hover:-translate-y-1 transition-transform"></i>
-                            <span class="text-[10px] font-black tracking-widest mt-1 opacity-80 uppercase">MAJU</span>
+                        <button id="bt-up" class="dpad-btn group relative w-full h-full bg-amber-200/80 rounded-t-3xl border-2 border-amber-400 flex items-center justify-center text-amber-900 hover:bg-amber-300 transition">
+                            <i class="fas fa-chevron-up text-3xl group-hover:-translate-y-1 transition-transform"></i>
                         </button>
                         <div></div>
 
-                        <!-- BUTTON KIRI -->
-                        <button id="bt-left" class="dpad-btn group relative w-full h-full bg-robloxBorder/60 rounded-l-2xl border-b-4 border-black/40 flex flex-col items-center justify-center text-white hover:bg-robloxBlue transition">
-                            <i class="fas fa-chevron-left text-2xl group-hover:-translate-x-1 transition-transform"></i>
-                            <span class="text-[10px] font-black tracking-widest mt-1 opacity-80 uppercase">KIRI</span>
+                        <button id="bt-left" class="dpad-btn group relative w-full h-full bg-amber-200/80 rounded-l-3xl border-2 border-amber-400 flex items-center justify-center text-amber-900 hover:bg-amber-300 transition">
+                            <i class="fas fa-chevron-left text-3xl group-hover:-translate-x-1 transition-transform"></i>
                         </button>
 
-                        <!-- PUSAT STATUS -->
                         <div class="flex items-center justify-center">
-                            <div class="w-12 h-12 rounded-2xl bg-black border-2 border-robloxBorder flex items-center justify-center shadow-inner">
-                                <div id="status-dot" class="w-4 h-4 bg-robloxRed rounded-full shadow-[0_0_15px_rgba(225,38,28,0.8)] transition-all"></div>
+                            <div class="w-12 h-12 rounded-full bg-amber-300 border-2 border-amber-500 flex items-center justify-center shadow-inner">
+                                <div id="status-dot" class="w-4 h-4 bg-red-500 rounded-full shadow transition-all"></div>
                             </div>
                         </div>
 
-                        <!-- BUTTON KANAN -->
-                        <button id="bt-right" class="dpad-btn group relative w-full h-full bg-robloxBorder/60 rounded-r-2xl border-b-4 border-black/40 flex flex-col items-center justify-center text-white hover:bg-robloxBlue transition">
-                            <i class="fas fa-chevron-right text-2xl group-hover:translate-x-1 transition-transform"></i>
-                            <span class="text-[10px] font-black tracking-widest mt-1 opacity-80 uppercase">KANAN</span>
+                        <button id="bt-right" class="dpad-btn group relative w-full h-full bg-amber-200/80 rounded-r-3xl border-2 border-amber-400 flex items-center justify-center text-amber-900 hover:bg-amber-300 transition">
+                            <i class="fas fa-chevron-right text-3xl group-hover:translate-x-1 transition-transform"></i>
                         </button>
 
                         <div></div>
-                        <!-- BUTTON BAWAH -->
-                        <button id="bt-down" class="dpad-btn group relative w-full h-full bg-robloxBorder/60 rounded-b-2xl border-b-4 border-black/40 flex flex-col items-center justify-center text-white hover:bg-robloxBlue transition">
-                            <span class="text-[10px] font-black tracking-widest mb-1 opacity-80 uppercase">MUNDUR</span>
-                            <i class="fas fa-chevron-down text-2xl group-hover:translate-y-1 transition-transform"></i>
+                        <button id="bt-down" class="dpad-btn group relative w-full h-full bg-amber-200/80 rounded-b-3xl border-2 border-amber-400 flex items-center justify-center text-amber-900 hover:bg-amber-300 transition">
+                            <i class="fas fa-chevron-down text-3xl group-hover:translate-y-1 transition-transform"></i>
                         </button>
                         <div></div>
                     </div>
                 </div>
 
-                <!-- Controller Info Footer -->
-                <div class="w-full flex justify-between items-center text-xs text-gray-400 border-t-2 border-robloxBorder pt-4 mt-2 font-medium">
-                    <span>Micro:bit BLE: <strong id="ble-status" class="text-robloxRed">Terputus</strong></span>
-                    <span>Firebase Sync: <strong id="fb-status" class="text-robloxYellow">Belum Terhubung</strong></span>
+                <div class="w-full flex justify-between items-center text-xs font-bold text-amber-900/80 border-t border-amber-300 pt-4 mt-2">
+                    <span>Micro:bit BLE: <strong id="ble-status" class="text-red-600">Terputus</strong></span>
+                    <span>Firebase Sync: <strong id="fb-status" class="text-orange-600">Belum Terhubung</strong></span>
                 </div>
             </section>
 
-            <!-- KOLOM 2: CAMERA HAND GESTURE RECOGNITION -->
-            <section class="bg-robloxCard/95 rounded-2xl p-6 lg:p-8 border-2 border-robloxBorder shadow-[0_4px_20px_rgba(0,0,0,0.4)] flex flex-col items-center justify-between min-h-[500px]">
+            <section class="bg-cardPurple/90 backdrop-blur-xl rounded-3xl p-6 lg:p-8 border-4 border-borderPurple shadow-lg flex flex-col items-center justify-between min-h-[500px]">
                 <div class="w-full flex justify-between items-center mb-2">
-                    <h2 class="text-lg font-bold text-white uppercase flex items-center gap-2">
-                        <i class="fas fa-video text-robloxBlue"></i> AI Hand Gesture
+                    <h2 class="text-lg font-bold text-amber-900 flex items-center gap-2">
+                        <i class="fas fa-video text-amber-700"></i> AI Hand Gesture Recognition
                     </h2>
-                    <!-- Toggle Switch AI Camera -->
-                    <button id="btn-toggle-cam" onclick="toggleCamera()" class="px-4 py-2 bg-robloxBlue hover:bg-robloxBlueHover text-white font-bold rounded-xl text-xs border-b-4 border-blue-900 transition active:translate-y-0.5 active:border-b-0 flex items-center gap-2 uppercase tracking-wider">
+                    <button id="btn-toggle-cam" onclick="toggleCamera()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs shadow transition active:scale-95 flex items-center gap-2">
                         <i class="fas fa-power-off"></i>
                         <span id="cam-btn-text">Nyalakan Kamera</span>
                     </button>
                 </div>
 
-                <!-- Camera Container -->
-                <div class="relative w-full max-w-[280px] aspect-square rounded-2xl overflow-hidden border-4 border-robloxBorder shadow-inner bg-black flex flex-col items-center justify-center my-auto">
+                <div class="relative w-full max-w-[280px] aspect-square rounded-2xl overflow-hidden border-4 border-amber-300 shadow bg-white flex flex-col items-center justify-center my-auto">
                     <div id="webcam-container" class="w-full h-full flex items-center justify-center"></div>
-                    <div id="cam-placeholder" class="text-gray-500 flex flex-col items-center gap-2">
-                        <i class="fas fa-camera text-4xl mb-1 text-robloxBorder"></i>
-                        <span class="text-xs font-bold uppercase">Kamera Off</span>
+                    <div id="cam-placeholder" class="text-amber-800/40 flex flex-col items-center gap-2">
+                        <i class="fas fa-camera text-3xl mb-1"></i>
+                        <span class="text-xs font-bold">Kamera Off</span>
                     </div>
                 </div>
 
-                <!-- Predictions Result Log -->
-                <div class="w-full border-t-2 border-robloxBorder pt-4 mt-2">
-                    <div class="text-[11px] text-gray-400 mb-2 font-bold flex justify-between uppercase">
-                        <span>Akurasi Teachable Machine:</span>
-                        <span>Prediksi Tertinggi = Aktif</span>
+                <!-- Panduan Gesture AI -->
+                <div class="w-full bg-amber-100/80 p-3 rounded-xl border border-amber-300 text-[11px] font-bold text-amber-900 space-y-1">
+                    <div class="text-amber-800 font-black mb-1">Panduan Gesture AI:</div>
+                    <div class="grid grid-cols-2 gap-1 text-[10px]">
+                        <span>🖐🏻 5 Jari: MAJU (up)</span>
+                        <span>✊🏻 Kepal: MUNDUR (down)</span>
+                        <span>✌🏻 2 Jari: KANAN (right)</span>
+                        <span>👍🏻 Jempol: KIRI (left)</span>
                     </div>
+                </div>
+
+                <div class="w-full border-t border-amber-300 pt-3 mt-2">
                     <div id="label-container" class="grid grid-cols-2 gap-2 text-xs font-mono"></div>
                 </div>
             </section>
@@ -182,42 +249,60 @@
         </main>
     </div>
 
-    <!-- Bottom Command Status Banner -->
-    <footer class="w-full max-w-[1600px] mx-auto mt-6 bg-robloxCard/95 rounded-2xl p-4 border-2 border-robloxBorder flex justify-between items-center text-sm shadow-md">
-        <span class="text-gray-300 font-bold uppercase tracking-wider">Perintah Terkirim:</span>
-        <div class="bg-black/70 px-6 py-2 rounded-xl border-2 border-robloxBorder font-mono font-black text-robloxYellow text-lg uppercase tracking-widest shadow-inner">
-            <span id="last-cmd">STOP</span>
+    <!-- FOOTER UI: Background Langit, Awan, Bukit Hijau & Kereta Roblox -->
+    <footer class="w-full max-w-[1600px] mx-auto mt-6 bg-cardPurple/90 rounded-2xl p-4 border-4 border-borderPurple flex flex-col justify-between items-center shadow-lg relative overflow-hidden">
+        <div class="w-full flex justify-between items-center mb-2 z-10 px-2">
+            <span class="text-amber-900 font-black text-sm uppercase tracking-wider">Status Kereta:</span>
+            <div class="bg-amber-200 px-6 py-1 rounded-xl border-2 border-amber-400 font-mono font-bold text-amber-900 text-sm uppercase tracking-wider shadow-inner">
+                <span id="last-cmd">STOP</span>
+            </div>
+        </div>
+
+        <!-- Track Langit + Bukit + Kereta Besar -->
+        <div class="train-container w-full rounded-2xl border-2 border-amber-400 flex items-end">
+            <!-- Background Awan -->
+            <div class="cloud-bg"></div>
+
+            <!-- Bukit Hijau Belakang & Depan -->
+            <div class="hills-bg-back"></div>
+            <div class="hills-bg-front"></div>
+
+            <!-- Rel Kereta -->
+            <div class="w-full h-10 rail-track border-t-2 border-b-2 border-amber-900/40"></div>
+            
+            <!-- Sprite Kereta Roblox Besar -->
+            <img id="roblox-cart" src="https://raw.githubusercontent.com/Maila9/Hand---gesture---ROBLOX/refs/heads/main/Group%20116.png" alt="Roblox Cart" class="train-sprite" />
         </div>
     </footer>
 
-    <!-- MODAL SETTING FIREBASE -->
-    <div id="fb-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-robloxCard border-4 border-robloxBorder rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4 relative">
-            <div class="flex justify-between items-center border-b-2 border-robloxBorder pb-3">
-                <h3 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                    <i class="fas fa-fire text-robloxRed"></i> Konfigurasi Firebase Realtime DB
+    <!-- Modal Configuration Firebase -->
+    <div id="fb-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-cardPurple border-4 border-borderPurple rounded-3xl p-6 w-full max-w-md shadow-2xl space-y-4 relative text-amber-950">
+            <div class="flex justify-between items-center border-b-2 border-amber-300 pb-3">
+                <h3 class="text-base font-bold text-amber-900 flex items-center gap-2">
+                    <i class="fas fa-fire text-orange-500"></i> Konfigurasi Firebase Realtime DB
                 </h3>
-                <button onclick="toggleModal(false)" class="text-gray-400 hover:text-white text-lg">
+                <button onclick="toggleModal(false)" class="text-amber-700 hover:text-amber-950">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-            
+
             <div class="space-y-3">
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 uppercase mb-1">API Key</label>
-                    <input type="text" id="fb-api-key" placeholder="AIzaSy..." class="w-full bg-black/60 border-2 border-robloxBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-robloxBlue">
+                    <label class="block text-xs font-bold text-amber-900 mb-1">API Key</label>
+                    <input type="text" id="fb-api-key" placeholder="AIzaSy..." class="w-full bg-white border-2 border-amber-300 rounded-xl px-3 py-2 text-xs text-amber-950 focus:outline-none focus:border-amber-500">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-gray-300 uppercase mb-1">Database URL</label>
-                    <input type="text" id="fb-db-url" placeholder="https://your-app-default-rtdb.firebaseio.com" class="w-full bg-black/60 border-2 border-robloxBorder rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-robloxBlue">
+                    <label class="block text-xs font-bold text-amber-900 mb-1">Database URL</label>
+                    <input type="text" id="fb-db-url" placeholder="https://your-app-default-rtdb.firebaseio.com" class="w-full bg-white border-2 border-amber-300 rounded-xl px-3 py-2 text-xs text-amber-950 focus:outline-none focus:border-amber-500">
                 </div>
             </div>
 
             <div class="pt-2 flex justify-end gap-2">
-                <button onclick="toggleModal(false)" class="px-4 py-2 bg-black/50 hover:bg-black text-gray-300 font-bold text-xs rounded-xl transition border-2 border-robloxBorder uppercase">
+                <button onclick="toggleModal(false)" class="px-4 py-2 bg-amber-200 hover:bg-amber-300 text-amber-900 font-bold text-xs rounded-xl transition">
                     Batal
                 </button>
-                <button onclick="initFirebase()" class="px-4 py-2 bg-robloxBlue hover:bg-robloxBlueHover text-white font-bold text-xs rounded-xl border-b-4 border-blue-900 transition uppercase tracking-wider">
+                <button onclick="initFirebase()" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow transition">
                     Simpan & Connect
                 </button>
             </div>
@@ -225,6 +310,100 @@
     </div>
 
 <script type="text/javascript">
+    // --- HELPER AUDIO BACKSOUND & SYNTHESIZER FALLBACK ---
+    let isAudioPlaying = false;
+    const bgmPlayer = document.getElementById('bgm-player');
+    const audioIcon = document.getElementById('audio-icon');
+    const audioStatusText = document.getElementById('audio-status-text');
+
+    let audioCtx = null;
+    let synthOscillator = null;
+
+    function startSynthMusic() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (synthOscillator) return;
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(329.63, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        synthOscillator = osc;
+    }
+
+    function stopSynthMusic() {
+        if (synthOscillator) {
+            synthOscillator.stop();
+            synthOscillator.disconnect();
+            synthOscillator = null;
+        }
+    }
+
+    function playAudioOnFirstInteraction() {
+        if (!isAudioPlaying) {
+            bgmPlayer.play().then(() => {
+                isAudioPlaying = true;
+                audioIcon.className = "fas fa-volume-up";
+                audioStatusText.innerText = "Playing";
+            }).catch(e => {
+                try {
+                    startSynthMusic();
+                    isAudioPlaying = true;
+                    audioIcon.className = "fas fa-volume-up";
+                    audioStatusText.innerText = "Playing (Synth)";
+                } catch(err) {
+                    console.log("Audio waiting for user interaction");
+                }
+            });
+        }
+    }
+
+    function toggleAudio() {
+        if (!isAudioPlaying) {
+            bgmPlayer.play().then(() => {
+                isAudioPlaying = true;
+                audioIcon.className = "fas fa-volume-up";
+                audioStatusText.innerText = "Playing";
+            }).catch(() => {
+                startSynthMusic();
+                isAudioPlaying = true;
+                audioIcon.className = "fas fa-volume-up";
+                audioStatusText.innerText = "Playing (Synth)";
+            });
+        } else {
+            bgmPlayer.pause();
+            stopSynthMusic();
+            isAudioPlaying = false;
+            audioIcon.className = "fas fa-volume-mute";
+            audioStatusText.innerText = "Mute";
+        }
+    }
+
+    // --- HELPER UPDATE POSISI KERETA BERDASARKAN EVENT DISKRET ---
+    let trainPositionPercent = 10;
+
+    function updateTrainAnimation(command) {
+        const cart = document.getElementById('roblox-cart');
+        if (!cart) return;
+
+        if (command === 'up' || command === 'right') {
+            trainPositionPercent += 5;
+            if (trainPositionPercent > 85) trainPositionPercent = 85;
+            cart.style.left = trainPositionPercent + "%";
+            cart.style.transform = "scaleX(1)";
+        } else if (command === 'down' || command === 'left') {
+            trainPositionPercent -= 5;
+            if (trainPositionPercent < 0) trainPositionPercent = 0;
+            cart.style.left = trainPositionPercent + "%";
+            cart.style.transform = "scaleX(-1)";
+        }
+    }
+
     // --- MODAL TOGGLE ---
     function toggleModal(show) {
         const modal = document.getElementById('fb-modal');
@@ -262,13 +441,13 @@
 
             dbRef = firebase.database().ref('robot_control');
             document.getElementById('fb-status').innerText = "Terhubung";
-            document.getElementById('fb-status').className = "text-green-400 font-bold";
+            document.getElementById('fb-status').className = "text-green-600 font-bold";
             toggleModal(false);
             alert("Berhasil terhubung ke Firebase!");
         } catch(e) {
             console.error("Firebase Init Error:", e);
             document.getElementById('fb-status').innerText = "Gagal Konek";
-            document.getElementById('fb-status').className = "text-robloxRed font-bold";
+            document.getElementById('fb-status').className = "text-red-600 font-bold";
             alert("Gagal konek Firebase. Periksa API Key / Database URL.");
         }
     }
@@ -286,12 +465,14 @@
     // --- 1. CONFIG & GLOBALS ---
     const MODEL_URL = "https://teachablemachine.withgoogle.com/models/mZ_Qhc9ZT/";
     let model, webcam, labelContainer, maxPredictions;
-    let bluetoothDevice, uartTxCharacteristic;
+    let bluetoothDevice, uartRxCharacteristic, uartTxCharacteristic;
     let currentCommand = "stop";
     let isAiMode = false;
+    let activeKey = null;
 
     const UART_SERVICE_UUID = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
     const UART_TX_CHARACTERISTIC_UUID = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
+    const UART_RX_CHARACTERISTIC_UUID = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
 
     // --- 2. WEB BLUETOOTH INTEGRATION ---
     async function connectBluetooth() {
@@ -303,33 +484,51 @@
 
             const server = await bluetoothDevice.gatt.connect();
             const service = await server.getPrimaryService(UART_SERVICE_UUID);
-            uartTxCharacteristic = await service.getCharacteristic(UART_TX_CHARACTERISTIC_UUID);
+
+            try {
+                uartTxCharacteristic = await service.getCharacteristic(UART_TX_CHARACTERISTIC_UUID);
+            } catch (e) { console.warn("UART TX Char not found", e); }
+
+            try {
+                uartRxCharacteristic = await service.getCharacteristic(UART_RX_CHARACTERISTIC_UUID);
+            } catch (e) { console.warn("UART RX Char not found", e); }
 
             document.getElementById('ble-status').innerText = "Terhubung";
-            document.getElementById('ble-status').className = "text-green-400 font-bold";
+            document.getElementById('ble-status').className = "text-green-600 font-bold";
             document.getElementById('ble-btn-text').innerText = "Micro:bit Terhubung";
-            document.getElementById('status-dot').className = "w-4 h-4 bg-green-500 rounded-full shadow-[0_0_15px_rgba(34,197,94,0.9)] animate-pulse";
+            document.getElementById('status-dot').className = "w-4 h-4 bg-green-500 rounded-full shadow animate-pulse";
         } catch (error) {
             console.error("Bluetooth Gagal:", error);
             alert("Gagal/Dibatalkan terhubung dengan micro:bit.");
         }
     }
 
-    function sendToMicrobit(command) {
+    async function sendToMicrobit(command) {
         if (currentCommand === command) return;
         currentCommand = command;
         document.getElementById('last-cmd').innerText = command;
 
+        updateTrainAnimation(command);
+
         sendToFirebase(command, isAiMode ? "AI_AUTOMATIC" : "MANUAL_JOYSTICK");
 
-        if (uartTxCharacteristic) {
-            const encoder = new TextEncoder();
-            uartTxCharacteristic.writeValue(encoder.encode(command + "\n"))
-                .catch(err => console.error("Bluetooth TX Error:", err));
+        const targetChar = uartRxCharacteristic || uartTxCharacteristic;
+        if (targetChar) {
+            try {
+                const encoder = new TextEncoder();
+
+                const structuredPayload = `move,${command}\n`;
+                await targetChar.writeValue(encoder.encode(structuredPayload));
+
+                const plainPayload = `${command}\n`;
+                await targetChar.writeValue(encoder.encode(plainPayload));
+            } catch (err) {
+                console.error("Bluetooth TX Error:", err);
+            }
         }
     }
 
-    // --- 3. D-PAD MANUAL JOYSTICK LOGIC ---
+    // --- 3. D-PAD MANUAL JOYSTICK & KEYBOARD ARROW KEYS LOGIC ---
     function setupManualJoystick() {
         const buttons = {
             'bt-up': 'up',
@@ -338,12 +537,14 @@
             'bt-right': 'right'
         };
 
+        // Event listener klik D-Pad UI
         Object.keys(buttons).forEach(id => {
             const btn = document.getElementById(id);
             const cmd = buttons[id];
 
             const startPress = (e) => {
                 e.preventDefault();
+                playAudioOnFirstInteraction();
                 if (!isAiMode) {
                     highlightButton(id);
                     sendToMicrobit(cmd);
@@ -364,11 +565,43 @@
             btn.addEventListener('touchstart', startPress);
             btn.addEventListener('touchend', endPress);
         });
+
+        // Event Listener untuk Tombol Panah Keyboard
+        window.addEventListener('keydown', (e) => {
+            if (isAiMode) return;
+            playAudioOnFirstInteraction();
+
+            let cmd = null;
+            let btnId = null;
+
+            if (e.key === "ArrowUp") { cmd = "up"; btnId = "bt-up"; }
+            else if (e.key === "ArrowDown") { cmd = "down"; btnId = "bt-down"; }
+            else if (e.key === "ArrowLeft") { cmd = "left"; btnId = "bt-left"; }
+            else if (e.key === "ArrowRight") { cmd = "right"; btnId = "bt-right"; }
+
+            if (cmd && activeKey !== e.key) {
+                e.preventDefault();
+                activeKey = e.key;
+                highlightButton(btnId);
+                sendToMicrobit(cmd);
+            }
+        });
+
+        window.addEventListener('keyup', (e) => {
+            if (isAiMode) return;
+            if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+                e.preventDefault();
+                activeKey = null;
+                resetButtons();
+                sendToMicrobit("stop");
+            }
+        });
     }
     setupManualJoystick();
 
-    // --- 4. TEACHABLE MACHINE AI CAMERA ---
+    // --- 4. TEACHABLE MACHINE AI CAMERA & GESTURE MAPPING ---
     async function toggleCamera() {
+        playAudioOnFirstInteraction();
         if (!isAiMode) {
             document.getElementById('cam-btn-text').innerText = "Memuat AI...";
             if (!model) {
@@ -394,10 +627,9 @@
 
             isAiMode = true;
             document.getElementById('cam-btn-text').innerText = "Matikan Kamera";
-            document.getElementById('btn-toggle-cam').classList.replace('bg-robloxBlue', 'bg-robloxRed');
-            document.getElementById('btn-toggle-cam').classList.replace('border-blue-900', 'border-red-900');
+            document.getElementById('btn-toggle-cam').classList.replace('bg-amber-600', 'bg-red-600');
             document.getElementById('mode-badge').innerText = "Mode: AI Gesture";
-            document.getElementById('mode-badge').className = "px-4 py-2.5 rounded-xl bg-robloxRed border-2 border-robloxYellow text-xs font-bold text-white tracking-wider uppercase animate-pulse";
+            document.getElementById('mode-badge').className = "px-4 py-2.5 rounded-xl bg-orange-500 border border-orange-400 text-xs font-bold text-white tracking-wider uppercase animate-pulse";
 
             window.requestAnimationFrame(loop);
         } else {
@@ -406,12 +638,11 @@
             document.getElementById('webcam-container').innerHTML = "";
             document.getElementById('cam-placeholder').style.display = "flex";
             document.getElementById('label-container').innerHTML = "";
-            
+
             document.getElementById('cam-btn-text').innerText = "Nyalakan Kamera";
-            document.getElementById('btn-toggle-cam').classList.replace('bg-robloxRed', 'bg-robloxBlue');
-            document.getElementById('btn-toggle-cam').classList.replace('border-red-900', 'border-blue-900');
-            document.getElementById('mode-badge').innerText = "Mode: Manual Joystick";
-            document.getElementById('mode-badge').className = "px-4 py-2.5 rounded-xl bg-black/50 border-2 border-robloxBorder text-xs font-bold text-robloxYellow tracking-wider uppercase";
+            document.getElementById('btn-toggle-cam').classList.replace('bg-red-600', 'bg-amber-600');
+            document.getElementById('mode-badge').innerText = "Mode: Manual / Keyboard";
+            document.getElementById('mode-badge').className = "px-4 py-2.5 rounded-xl bg-amber-200 border border-amber-400 text-xs font-bold text-amber-900 tracking-wider uppercase";
 
             resetButtons();
             sendToMicrobit("stop");
@@ -435,9 +666,9 @@
             const probability = prediction[i].probability;
 
             labelContainer.childNodes[i].innerHTML = 
-                `<div class="bg-black/60 p-1.5 rounded-lg border border-robloxBorder flex justify-between items-center">
-                    <span class="capitalize text-gray-200 text-[11px] font-bold">${className}</span>
-                    <span class="font-bold text-robloxYellow text-[11px]">${(probability * 100).toFixed(0)}%</span>
+                `<div class="bg-amber-100 p-1.5 rounded-lg border border-amber-300 flex justify-between items-center">
+                    <span class="capitalize text-amber-900 font-bold text-[11px]">${className}</span>
+                    <span class="font-bold text-amber-700 text-[11px]">${(probability * 100).toFixed(0)}%</span>
                  </div>`;
 
             if (probability > highestProb) {
@@ -448,19 +679,24 @@
 
         if (highestProb < 0.65) bestClass = "stop";
 
-        if (bestClass.includes("atas") || bestClass.includes("up") || bestClass.includes("maju")) {
+        // --- PEMETAAN AI GESTURE ---
+        if (bestClass.includes("open") || bestClass.includes("lima") || bestClass.includes("5") || bestClass.includes("terbuka") || bestClass.includes("up") || bestClass.includes("maju") || bestClass.includes("atas")) {
             highlightButton('bt-up');
             sendToMicrobit("up");
-        } else if (bestClass.includes("bawah") || bestClass.includes("down") || bestClass.includes("mundur")) {
+        } 
+        else if (bestClass.includes("fist") || bestClass.includes("kepal") || bestClass.includes("genggam") || bestClass.includes("down") || bestClass.includes("mundur") || bestClass.includes("bawah")) {
             highlightButton('bt-down');
             sendToMicrobit("down");
-        } else if (bestClass.includes("kiri") || bestClass.includes("left")) {
-            highlightButton('bt-left');
-            sendToMicrobit("left");
-        } else if (bestClass.includes("kanan") || bestClass.includes("right")) {
+        } 
+        else if (bestClass.includes("peace") || bestClass.includes("two") || bestClass.includes("2") || bestClass.includes("victory") || bestClass.includes("right") || bestClass.includes("kanan")) {
             highlightButton('bt-right');
             sendToMicrobit("right");
-        } else {
+        } 
+        else if (bestClass.includes("thumb") || bestClass.includes("jempol") || bestClass.includes("like") || bestClass.includes("left") || bestClass.includes("kiri")) {
+            highlightButton('bt-left');
+            sendToMicrobit("left");
+        } 
+        else {
             resetButtons();
             sendToMicrobit("stop");
         }
